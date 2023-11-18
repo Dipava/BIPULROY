@@ -333,7 +333,7 @@ resource "aws_iam_instance_profile" "rds_admin_profile" {
     image_id          = data.aws_ami.amzlinux2.id
     instance_type     = var.instance_type
     iam_instance_profile_name = aws_iam_instance_profile.rds_admin_profile.name
-    user_data         = file("${path.module}/user_data.sh")
+    user_data         = base64encode(templatefile("app1-ums-install.tmpl", { rds_db_endpoint = data.terraform_remote_state.rdsdb.outputs.db_instance_address }))
     block_device_mappings = [
       {
         # Root volume
@@ -427,7 +427,7 @@ resource "aws_iam_instance_profile" "rds_admin_profile" {
     update_default_version      = true
     image_id          = data.aws_ami.amzlinux2.id
     instance_type     = var.instance_type
-    user_data         = file("${path.module}/user_data.sh")
+    user_data                   = filebase64("${path.module}/app2-install.sh")
     block_device_mappings = [
       {
         # Root volume
