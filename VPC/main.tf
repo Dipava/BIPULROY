@@ -1,54 +1,112 @@
-locals {
 
-environment = "dev"
-owners = "Dipava"
-project = "linuxproject"
-name = "${local.environment}-${local.project}"
-tags = {
-    Owners = local.owners
-    Environment = local.environment
-    Project = local.project
-    Name = "${local.environment}-${local.project}"
-    }
-}
-
-data "aws_ami" "amzlinux2" {
-  most_recent = true
-  owners = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn2-ami-kernel-5.10-hvm-*-gp2"]
-  }
-
-  filter {
-    name   = "virtualization-type"
-    values = ["hvm"]
-  }
-
-}
 
 module "vpc" {
-  source  = "./Modules/aws-vpc"
-
-  vpc_name = "${local.name}-${var.vpc_name}"
+  source  = "./modules/aws-vpc"
+  # VPC Basic Details
+  name = var.vpc_name
   cidr = var.vpc_cidr_block
   azs             = var.vpc_availability_zones
-  subnet_cidr  = var.vpc_subnets
-  enable_dns_hostnames = false
+  public_subnets  = var.vpc_public_subnets
+  private_subnets = var.vpc_private_subnets  
+  # Database Subnets
+  database_subnets = var.vpc_database_subnets
+  create_database_subnet_group = var.vpc_create_database_subnet_group
+  create_database_subnet_route_table = var.vpc_create_database_subnet_route_table
+  database_subnet_group_name = var.vpc_database_subnet_group_name
+  # NAT Gateways - Outbound Communication
+  enable_nat_gateway = var.vpc_enable_nat_gateway 
+  single_nat_gateway = var.vpc_single_nat_gateway
+  # VPC DNS Parameters
+  enable_dns_hostnames = true
   enable_dns_support   = true
-  sg_name = "${local.name}-SG"
-  sg_description = "SG-${local.environment}-${local.project}"
-  ingress_source_port = var.ingress_source_port
-  ingress_destination_port = var.ingress_destination_port
-  ingress_protocol = var.ingress_protocol
-  ingress_cidr = var.ingress_cidr
-  egress_source_port = var.egress_source_port
-  egress_destination_port = var.egress_destination_port
-  egress_protocol = var.egress_protocol
-  egress_cidr = var.egress_cidr
+  tags = local.common_tags
+  vpc_tags = local.common_tags
+  # Additional Tags to Subnets
+  public_subnet_tags = {
+    Type = "Public Subnets"
+  }
+  private_subnet_tags = {
+    Type = "Private Subnets"
+  }  
+  database_subnet_tags = {
+    Type = "Private Database Subnets"
+  }
 }
 
+
+module "loadbalancer_sg" {
+  source  = "./modules/aws-security-group"
+  name = "loadbalancer-sg"
+  description = "Security Group with HTTP port open for entire Internet, egress ports are all world open"
+  vpc_id = module.vpc.vpc_id
+  ingress_rules       = ["http-80-tcp","https-443-tcp"]
+  ingress_cidr_blocks = ["0.0.0.0/0"]
+  egress_rules       = ["all-all"]
+  ingress_with_cidr_blocks = [
+      {
+        from_port   = 81
+        to_port     = 81
+        protocol    = 6
+        description = "Allow Port 81 from the Internet"
+        cidr_blocks = "0.0.0.0/0"
+      },
+    ]
+    
+    tags = local.common_tags
+  }
+
+module "private_sg" {
+  source  = "./modules/aws-security-group"
+  name = "private-sg"
+  description = "Security Group with HTTP & SSH port open for entire VPC Block (IPv4 CIDR), egress ports are all world open"
+  vpc_id = module.vpc.vpc_id
+  ingress_rules       = ["ssh-tcp", "http-80-tcp", "http-8080-tcp"]
+  ingress_cidr_blocks = [module.vpc.vpc_cidr_block]
+  egress_rules       = ["all-all"]
+  tags = local.common_tags
+}
+
+#Secutity group for RDS DB
+
+module "rdsdb_sg" {
+  source  = "./modules/aws-security-group"
+  name = "rdsdb_sg"
+  description = "Access to MySQL DB from Entire CIDR Block"
+  vpc_id = module.vpc.vpc_id
+  egress_rules       = ["all-all"]
+  tags = local.common_tags
+
+ingress_with_source_security_group_id = [
+    {
+      rule                     = "mysql-tcp"
+      source_security_group_id = data.aws_security_group.default.id
+    },
+    {
+      from_port                = 3306
+      to_port                  = 3306
+      protocol                 = tcp
+      description              = "MySQL from Private SG"
+      source_security_group_id = data.aws_security_group.default.id
+    },
+  ]
+
+}
+
+/*
+ingress_with_cidr_blocks = [
+    {
+      from_port   = 3306
+      to_port     = 3306
+      protocol    = "tcp"
+      description = "MySQL from with VPC"
+      cidr_blocks = module.vpc.vpc_cidr_block
+    },
+  ]
+*/
+
+
+
+/*
 resource "aws_instance" "test-vm" {
   depends_on = [module.vpc]
   ami           = data.aws_ami.amzlinux2.id
@@ -62,3 +120,4 @@ resource "aws_instance" "test-vm" {
   tags = local.tags
 
 }
+*/

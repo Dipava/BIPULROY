@@ -1,6 +1,37 @@
+
+data "aws_ami" "amzlinux2" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*"]
+  }
+
+  filter {
+    name   = "root-device-type"
+    values = ["ebs"]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+
+  filter {
+    name   = "architecture"
+    values = ["x86_64"]
+  }
+}
+
+data "aws_route53_zone" "mydomain" {
+  name = "droytech.in"
+
+}
+
 resource "aws_route53_record" "apps_dns" {
     zone_id = data.aws_route53_zone.mydomain.zone_id
-    name    = "lt-3t.droytech.in"
+    name    = "rcl.droytech.in"
     type    = "A"
     alias {
       name                   = module.alb.lb_dns_name
@@ -22,7 +53,7 @@ resource "aws_route53_record" "apps_dns" {
   # ELB-ALB Module
   
   module "alb" {
-    source  = "./modules/alb"
+    source  = "./modules/aws-alb"
     version = "7.0.0"
     name               = "dev-alb"
     load_balancer_type = "application"
@@ -196,7 +227,7 @@ resource "aws_route53_record" "apps_dns" {
   }
   
   module "app1" {
-    source  = ""./modules/asg""
+    source  = "./modules/aws-asg"
     version = "6.5.2"
   
     # Autoscaling group -app1
@@ -248,7 +279,7 @@ resource "aws_route53_record" "apps_dns" {
     update_default_version      = true
     image_id          = data.aws_ami.amzlinux2.id
     instance_type     = var.instance_type
-    user_data         = filebase64("${path.module}/app1-install.sh")
+    user_data         = file("${path.module}/user_data.sh")
     block_device_mappings = [
       {
         # Root volume
@@ -342,7 +373,7 @@ resource "aws_route53_record" "apps_dns" {
     update_default_version      = true
     image_id          = data.aws_ami.amzlinux2.id
     instance_type     = var.instance_type
-    user_data         = filebase64("${path.module}/app2-install.sh")
+    user_data         = file("${path.module}/user_data.sh")
     block_device_mappings = [
       {
         # Root volume
@@ -437,7 +468,7 @@ resource "aws_route53_record" "apps_dns" {
     update_default_version      = true
     image_id          = data.aws_ami.amzlinux2.id
     instance_type     = var.instance_type
-    user_data         = base64encode(templatefile("app3-ums-install.tmpl",{rds_db_endpoint = data.terraform_remote_state.rdsdb.outputs.db_instance_address}))
+    user_data         = file("${path.module}/user_data.sh")
     block_device_mappings = [
       {
         # Root volume
