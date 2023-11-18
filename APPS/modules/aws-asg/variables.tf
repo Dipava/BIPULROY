@@ -522,7 +522,7 @@ variable "scaling_policies" {
 variable "create_iam_instance_profile" {
   description = "Determines whether an IAM instance profile is created or to use an existing IAM instance profile"
   type        = bool
-  default     = false
+  default     = true
 }
 
 variable "iam_instance_profile_arn" {

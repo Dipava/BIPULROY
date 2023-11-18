@@ -1,5 +1,10 @@
 
-data "aws_ami" "amzlinux2" {
+################
+##AMI Datasource
+################
+
+
+data "aws_ami" "ubuntu" {
   most_recent = true
   owners      = ["amazon"]
 
@@ -29,6 +34,11 @@ data "aws_route53_zone" "mydomain" {
 
 }
 
+
+###########
+####R53####
+###########
+
 resource "aws_route53_record" "apps_dns" {
     zone_id = data.aws_route53_zone.mydomain.zone_id
     name    = "rcl.droytech.in"
@@ -40,6 +50,10 @@ resource "aws_route53_record" "apps_dns" {
     }
   }
   
+###########
+####ACM####
+###########
+
   resource "aws_acm_certificate" "acm" {
     count = var.create_certificate ? 1 : 0
     zone_id    = data.aws_route53_zone.mydomain.zone_id
@@ -48,9 +62,9 @@ resource "aws_route53_record" "apps_dns" {
     tags = {Name = "acm-droytech"}
   }
   
-  # ALB for App1, App2 and App3 
-  
-  # ELB-ALB Module
+###########
+####ALB####
+###########
   
   module "alb" {
     source  = "./modules/aws-alb"
@@ -225,7 +239,46 @@ resource "aws_route53_record" "apps_dns" {
     
     tags = {Name = "alb-dev"}
   }
-  
+
+############ 
+##IAM ROLE##
+############
+
+  resource "aws_iam_role" "rds_admin_role" {
+  name = "ec2_rds_role"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "ec2.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "rdspol_attachment" {
+  role       = aws_iam_role.rds_admin_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonRDSFullAccess"
+}
+
+resource "aws_iam_instance_profile" "rds_admin_profile" {
+  name = "rds_admin_profile"
+  role = aws_iam_role.rds_admin_role.name
+}
+
+
+###########
+####ASG####
+###########
+
+
   module "app1" {
     source  = "./modules/aws-asg"
     version = "6.5.2"
@@ -279,6 +332,7 @@ resource "aws_route53_record" "apps_dns" {
     update_default_version      = true
     image_id          = data.aws_ami.amzlinux2.id
     instance_type     = var.instance_type
+    iam_instance_profile_name = aws_iam_instance_profile.rds_admin_profile.name
     user_data         = file("${path.module}/user_data.sh")
     block_device_mappings = [
       {
