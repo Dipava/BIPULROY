@@ -5,7 +5,7 @@
 variable "aws_region" {
   description = "AWS Region"
   type = string 
-  default = "ap-southeast-1"
+  default = "ap-south-1"
 }
 
 variable "vpc_name" {
@@ -95,6 +95,8 @@ variable "public_sg_description" {
 }
 
 
+
+/*
 
 variable "public_ingress_source_port" {
   description = "souce port for ingress rule"
@@ -239,3 +241,6 @@ variable "database_egress_cidr" {
   type        = list(string)
   default     = []
 }
+
+
+*/

@@ -1,3 +1,12 @@
+
+#  TERRAFORM AWS ACM VARIABLES
+
+variable "create_certificate" {
+  description = "Determines whether ACM Creates Certificates"
+  type = bool
+}
+
+
 #  TERRAFORM AWS ALB VARIABLES
 #App1 DNS Name
 variable "app1_dns_name" {
