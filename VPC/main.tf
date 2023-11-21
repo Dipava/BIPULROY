@@ -1,9 +1,19 @@
-
+locals {
+  owners = var.business_division
+  environment = var.environment
+  name = "${var.business_division}-${var.environment}"
+  #name = "${local.owners}-${local.environment}"
+  common_tags = {
+    owners = local.owners
+    environment = local.environment
+    Name = local.name
+  }
+}
 
 module "vpc" {
   source  = "./modules/aws-vpc"
   # VPC Basic Details
-  name = var.vpc_name
+  vpc_name = var.vpc_name
   cidr = var.vpc_cidr_block
   azs             = var.vpc_availability_zones
   public_subnets  = var.vpc_public_subnets
@@ -19,7 +29,6 @@ module "vpc" {
   # VPC DNS Parameters
   enable_dns_hostnames = true
   enable_dns_support   = true
-  tags = local.common_tags
   vpc_tags = local.common_tags
   # Additional Tags to Subnets
   public_subnet_tags = {
@@ -79,14 +88,14 @@ module "rdsdb_sg" {
 ingress_with_source_security_group_id = [
     {
       rule                     = "mysql-tcp"
-      source_security_group_id = data.aws_security_group.default.id
+      source_security_group_id = module.private_sg.security_group_id
     },
     {
       from_port                = 3306
       to_port                  = 3306
-      protocol                 = tcp
+      protocol                 = 6
       description              = "MySQL from Private SG"
-      source_security_group_id = data.aws_security_group.default.id
+      source_security_group_id = module.private_sg.security_group_id
     },
   ]
 

@@ -12,12 +12,12 @@ terraform {
   }
   backend "s3" {
     bucket         = "dipava-tfstate-files"
-    key            = "dev/module3-asg-alb/alb-asg.tfstate"
-    region         = "us-east-1"
-    dynamodb_table = "module3-alb-asg"
+    key            = "dev/apps/apps.tfstate"
+    region         = "ap-south-1"
+    dynamodb_table = "c3-apps"
   }
 }
 
 provider "aws" {
-  region  = var.region
+  region  = "ap-south-1"
 }

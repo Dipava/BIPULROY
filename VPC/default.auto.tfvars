@@ -1,7 +1,7 @@
 vpc_name = "demovpc"
 vpc_cidr_block = "10.0.0.0/16"
-vpc_availability_zones = "us-east-1a"
-vpc_subnets = "10.0.10.0/24"
+vpc_availability_zones = ["ap-south-1a","ap-south-1b"]
+vpc_subnets = ["10.0.10.0/24","10.0.100.0/24"]
 aws_region = "us-east-1"
 ingress_source_port = 0
 ingress_destination_port = 0

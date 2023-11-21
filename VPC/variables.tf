@@ -1,3 +1,19 @@
+#Local Variables
+
+
+variable "business_division" {
+  description = "business_division"
+  type = string 
+  default = "blabla"
+}
+
+variable "environment" {
+  description = "environment"
+  type = string 
+  default = "dev"
+}
+
+
 # VPC Input Variables
 
 # VPC Name
@@ -25,7 +41,7 @@ variable "vpc_cidr_block" {
 variable "vpc_availability_zones" {
   description = "VPC Availability Zones"
   type = list(string)
-  default = ["us-east-1a", "us-east-1b"]
+  default = ["ap-south-1a", "ap-south-1b"]
 }
 
 # VPC Public Subnets
@@ -66,6 +82,7 @@ variable "vpc_create_database_subnet_route_table" {
 variable "vpc_database_subnet_group_name" {
   description = "Enable only single NAT Gateway in one Availability Zone to save costs during our demos"
   type = string
+  default = "db-subnet"
 }
   
 # VPC Enable NAT Gateway (True or False) 

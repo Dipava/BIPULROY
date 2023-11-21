@@ -1,54 +1,50 @@
+# VPC ID
 output "vpc_id" {
   description = "The ID of the VPC"
   value       = module.vpc.vpc_id
 }
 
-output "vpc_arn" {
-  description = "The ARN of the VPC"
-  value       = module.vpc.vpc_arn
-}
-
+# VPC CIDR blocks
 output "vpc_cidr_block" {
   description = "The CIDR block of the VPC"
   value       = module.vpc.vpc_cidr_block
 }
 
-output "vpc_main_route_table_id" {
-  description = "The ID of the main route table associated with this VPC"
-  value       = module.vpc.vpc_route_table_id
-}
-
-output "vpc_owner_id" {
-  description = "The ID of the AWS account that owns the VPC"
-  value       = module.vpc.vpc_owner_id
-}
-
-output "vpc_subnets_ids" {
+# VPC Private Subnets
+output "private_subnets" {
   description = "List of IDs of private subnets"
-  value       = module.vpc.vpc_subnets
+  value       = module.vpc.private_subnets
+}
+
+# VPC Public Subnets
+output "public_subnets" {
+  description = "List of IDs of public subnets"
+  value       = module.vpc.public_subnets
+}
+
+# VPC Public Subnets
+output "database_subnets" {
+  description = "List of IDs of public subnets"
+  value       = module.vpc.database_subnets
+}
+
+output "database_subnet_group_name" {
+  description = "Name of database subnet group"
+  value       = module.vpc.database_subnet_group_name
 }
 
 
-output "vpc_subnet_arns" {
-  description = "List of ARNs of private subnets"
-  value       = module.vpc.vpc_subnet_arns
+# VPC NAT gateway Public IP
+output "nat_public_ips" {
+  description = "List of public Elastic IPs created for AWS NAT Gateway"
+  value       = module.vpc.nat_public_ips
 }
 
-output "vpc_subnets_cidr_blocks" {
-  description = "List of cidr_blocks of private subnets"
-  value       = module.vpc.vpc_subnets_cidr_blocks
+# VPC AZs
+output "azs" {
+  description = "A list of availability zones spefified as argument to this module"
+  value       = module.vpc.azs
 }
-
-output "main_route_table_ids" {
-  description = "List of IDs of public route tables"
-  value       = module.vpc.main_route_table_ids
-}
-
-output "igw_id" {
-  description = "The ID of the Internet Gateway"
-  value       = module.vpc.igw_id
-}
-
 # AWS EC2 Security Group Terraform Outputs
 
 # ALB Security Group Outputs
@@ -96,6 +92,33 @@ output "private_sg_group_name" {
   description = "The name of the security group"
   value       = module.private_sg.security_group_name
 }
+
+
+
+
+# RDS DB Instances Security Group Outputs
+## rdsdb_sg_group_id
+
+output "rdsdb_sg_group_id" {
+  description = "The ID of the security group"
+  value       = module.rdsdb_sg.security_group_id
+}
+
+## rdsdb_sg_group_vpc_id
+
+output "rdsdb_sg_group_vpc_id" {
+  description = "The VPC ID"
+  value       = module.rdsdb_sg.security_group_vpc_id
+}
+
+## rdsdb_sg_group_name
+
+output "rdsdb_sg_group_name" {
+  description = "The name of the security group"
+  value       = module.rdsdb_sg.security_group_name
+}
+
+
 
 
 

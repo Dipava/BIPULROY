@@ -10,6 +10,7 @@ max_subnet_length = max(
   local.len_database_subnets,
   )
 
+
 create_vpc = var.create_vpc
  
 environment = var.environment
@@ -33,7 +34,7 @@ resource "aws_vpc" "main" {
   enable_dns_hostnames = var.enable_dns_hostnames
 
   tags = merge(
-    { "Name" = var.name },
+    { "Name" = var.vpc_name },
     var.tags,
     var.vpc_tags,
   )
@@ -47,13 +48,13 @@ resource "aws_subnet" "public" {
   count = local.len_public_subnets
   availability_zone     = length(regexall("^[a-z]{2}-", element(var.azs, count.index))) > 0 ? element(var.azs, count.index) : null
   availability_zone_id  = length(regexall("^[a-z]{2}-", element(var.azs, count.index))) == 0 ? element(var.azs, count.index) : null  
-  vpc_id = aws_vpc.main.id
+  vpc_id = aws_vpc.main[0].id
   cidr_block = element(concat(var.public_subnets, [""]), count.index)
   tags = merge(
     {
       Name = try(
         var.public_subnet_names[count.index],
-        format("${var.name}-${var.public_subnet_suffix}-%s", element(var.azs, count.index))
+        format("${var.vpc_name}-${var.public_subnet_suffix}-%s", element(var.azs, count.index))
       )
     },
     var.tags,
@@ -65,15 +66,15 @@ resource "aws_subnet" "public" {
 resource "aws_route_table" "public" {
   count = local.create_public_subnets ? 1 : 0
 
-  vpc_id = aws_vpc.main.id
+  vpc_id = aws_vpc.main[0].id
 
   route {
     cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.igw.id
+    gateway_id = aws_internet_gateway.igw[0].id
   }
 
   tags = merge(
-    { "Name" = "${var.name}-${var.public_subnet_suffix}" },
+    { "Name" = "${var.vpc_name}-${var.public_subnet_suffix}" },
     var.tags,
     var.public_route_table_tags,
   )
@@ -110,13 +111,13 @@ resource "aws_subnet" "private" {
 
   availability_zone                              = length(regexall("^[a-z]{2}-", element(var.azs, count.index))) > 0 ? element(var.azs, count.index) : null
   availability_zone_id                           = length(regexall("^[a-z]{2}-", element(var.azs, count.index))) == 0 ? element(var.azs, count.index) : null
-  vpc_id = aws_vpc.main.id
+  vpc_id = aws_vpc.main[0].id
   cidr_block = element(concat(var.private_subnets, [""]), count.index)
   tags = merge(
     {
       Name = try(
         var.private_subnet_names[count.index],
-        format("${var.name}-${var.private_subnet_suffix}-%s", element(var.azs, count.index))
+        format("${var.vpc_name}-${var.private_subnet_suffix}-%s", element(var.azs, count.index))
       )
     },
     var.tags,
@@ -129,12 +130,12 @@ resource "aws_subnet" "private" {
 resource "aws_route_table" "private" {
   count = local.create_private_subnets && local.max_subnet_length > 0 ? local.nat_gateway_count : 0
 
-  vpc_id = local.vpc_id
+  vpc_id = aws_vpc.main[0].id
 
   tags = merge(
     {
-      "Name" = var.single_nat_gateway ? "${var.name}-${var.private_subnet_suffix}" : format(
-        "${var.name}-${var.private_subnet_suffix}-%s",
+      "Name" = var.single_nat_gateway ? "${var.vpc_name}-${var.private_subnet_suffix}" : format(
+        "${var.vpc_name}-${var.private_subnet_suffix}-%s",
         element(var.azs, count.index),
       )
     },
@@ -163,12 +164,12 @@ resource "aws_subnet" "database" {
   availability_zone                              = length(regexall("^[a-z]{2}-", element(var.azs, count.index))) > 0 ? element(var.azs, count.index) : null
   availability_zone_id                           = length(regexall("^[a-z]{2}-", element(var.azs, count.index))) == 0 ? element(var.azs, count.index) : null
   cidr_block = element(concat(var.database_subnets, [""]), count.index)
-  vpc_id = aws_vpc.main.id
+  vpc_id = aws_vpc.main[0].id
   tags = merge(
     {
       Name = try(
         var.database_subnet_names[count.index],
-        format("${var.name}-${var.database_subnet_suffix}-%s", element(var.azs, count.index))
+        format("${var.vpc_name}-${var.database_subnet_suffix}-%s", element(var.azs, count.index))
       )
     },
     var.tags,
@@ -180,13 +181,13 @@ resource "aws_subnet" "database" {
 resource "aws_db_subnet_group" "database" {
   count = local.create_database_subnets && var.create_database_subnet_group ? 1 : 0
 
-  name        = lower(coalesce(var.database_subnet_group_name, var.name))
-  description = "Database subnet group for ${var.name}"
+  name        = lower(coalesce(var.database_subnet_group_name, var.vpc_name))
+  description = "Database subnet group for ${var.vpc_name}"
   subnet_ids  = aws_subnet.database[*].id
 
   tags = merge(
     {
-      "Name" = lower(coalesce(var.database_subnet_group_name, var.name))
+      "Name" = lower(coalesce(var.database_subnet_group_name, var.vpc_name))
     },
     var.tags,
     var.database_subnet_group_tags,
@@ -196,12 +197,12 @@ resource "aws_db_subnet_group" "database" {
 resource "aws_route_table" "database" {
   count = local.create_database_route_table ? var.single_nat_gateway || var.create_database_internet_gateway_route ? 1 : local.len_database_subnets : 0
 
-  vpc_id = local.vpc_id
+  vpc_id = aws_vpc.main[0].id
 
   tags = merge(
     {
-      "Name" = var.single_nat_gateway || var.create_database_internet_gateway_route ? "${var.name}-${var.database_subnet_suffix}" : format(
-        "${var.name}-${var.database_subnet_suffix}-%s",
+      "Name" = var.single_nat_gateway || var.create_database_internet_gateway_route ? "${var.vpc_name}-${var.database_subnet_suffix}" : format(
+        "${var.vpc_name}-${var.database_subnet_suffix}-%s",
         element(var.azs, count.index),
       )
     },
@@ -247,10 +248,10 @@ resource "aws_route" "database_nat_gateway" {
 resource "aws_internet_gateway" "igw" {
   count = local.create_public_subnets && var.create_igw ? 1 : 0
 
-  vpc_id = local.vpc_id
+  vpc_id = aws_vpc.main[0].id
 
   tags = merge(
-    { "Name" = var.name },
+    { "Name" = var.vpc_name },
     var.tags,
     var.igw_tags,
   )
@@ -269,7 +270,7 @@ resource "aws_eip" "nat" {
   tags = merge(
     {
       "Name" = format(
-        "${var.name}-%s",
+        "${var.vpc_name}-%s",
         element(var.azs, var.single_nat_gateway ? 0 : count.index),
       )
     },
@@ -295,7 +296,7 @@ resource "aws_nat_gateway" "ngw" {
   tags = merge(
     {
       "Name" = format(
-        "${var.name}-%s",
+        "${var.vpc_name}-%s",
         element(var.azs, var.single_nat_gateway ? 0 : count.index),
       )
     },

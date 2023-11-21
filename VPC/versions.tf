@@ -3,19 +3,19 @@ terraform {
   required_providers {
     aws = {
      source = "hashicorp/aws"
-     version = "~> 5.16.0" 
+     version = "~> 5.0" 
      }
 
   }
   backend "s3" {
     bucket         = "dipava-tfstate-files"
     key            = "dev/vpc/vpc.tfstate"
-    region         = var.aws_region
+    region         = "ap-south-1"
     dynamodb_table = "c1-vpc"
   }
 }
 
 provider "aws" {
-  region = var.aws_region
+  region = "ap-south-1"
 }
 

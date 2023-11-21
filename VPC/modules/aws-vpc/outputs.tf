@@ -167,3 +167,36 @@ output "database_route_table_association_ids" {
   value       = aws_route_table_association.database[*].id
 }
 
+
+################################################################################
+# Static values (arguments)
+################################################################################
+
+output "azs" {
+  description = "A list of availability zones specified as argument to this module"
+  value       = var.azs
+}
+
+output "name" {
+  description = "The name of the VPC specified as argument to this module"
+  value       = var.vpc_name
+}
+################################################################################
+# NAT Gateway
+################################################################################
+
+output "nat_ids" {
+  description = "List of allocation ID of Elastic IPs created for AWS NAT Gateway"
+  value       = aws_eip.nat[*].id
+}
+
+output "nat_public_ips" {
+  description = "List of public Elastic IPs created for AWS NAT Gateway"
+  value       = var.reuse_nat_ips ? var.external_nat_ips : aws_eip.nat[*].public_ip
+}
+
+output "natgw_ids" {
+  description = "List of NAT Gateway IDs"
+  value       = aws_nat_gateway.ngw[*].id
+}
+

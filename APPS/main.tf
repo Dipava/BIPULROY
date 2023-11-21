@@ -68,7 +68,6 @@ resource "aws_route53_record" "apps_dns" {
   
   module "alb" {
     source  = "./modules/aws-alb"
-    version = "7.0.0"
     name               = "dev-alb"
     load_balancer_type = "application"
     vpc_id             = data.terraform_remote_state.vpc.outputs.vpc_id
@@ -281,8 +280,7 @@ resource "aws_iam_instance_profile" "rds_admin_profile" {
 
   module "app1" {
     source  = "./modules/aws-asg"
-    version = "6.5.2"
-  
+   
     # Autoscaling group -app1
     # depends_on = [data.terraform_remote_state.vpc]
     name            = "app1-asg"
@@ -375,9 +373,8 @@ resource "aws_iam_instance_profile" "rds_admin_profile" {
     }
   }
   module "app2" {
-    source  = "./modules/asg"
-    version = "6.5.2"
-  
+    source  = "./modules/aws-asg"
+   
     # Autoscaling group -app2
     # depends_on = [data.terraform_remote_state.vpc]
     name            = "app2-asg"
@@ -470,9 +467,8 @@ resource "aws_iam_instance_profile" "rds_admin_profile" {
   }
   
   module "app3" {
-    source  = "./modules/asg"
-    version = "6.5.2"
-  
+    source  = "./modules/aws-asg"
+   
     # Autoscaling group -app3
     # depends_on = [data.terraform_remote_state.vpc,data.terraform_remote_state.rdsdb]
     name            = "app3-asg"

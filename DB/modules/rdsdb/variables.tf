@@ -93,7 +93,7 @@ variable "backup_retention_period" {
   type        = number
 }
 
-variable "final_snapshot_identifier" {
+variable "final_snapshot" {
   description = "Name of The SS Taken before The Deletion of AWS RDS Database"
   type        = string
 }
@@ -116,11 +116,18 @@ variable "storage_encrypted" {
   default     = false
 }
 
+variable "create_monitoring_role" {
+  description = "AWS DB Parameter Group Name"
+  type        = bool
+  default     = true
+
+}
+
 
 variable "monitoring_interval" {
   description = "AWS RDS Database Monitoring Interval"
   type        = number
-  default     = " "
+  default     = 0
 }
 
 variable "apply_immediately" {
@@ -135,6 +142,10 @@ variable "rdspg_name" {
   type        = string
   default     = " "
 }
+
+
+/*
+
 
 variable "rdspg_family" {
   description = "AWS DB Parameter Group Family"
@@ -199,5 +210,4 @@ variable "option_settings_name_value" {
   default     = " "
 }
 
-
-
+*/

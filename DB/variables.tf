@@ -1,7 +1,13 @@
+variable "aws_region" {
+  description = "AWS Region"
+  type = string 
+  default = "ap-south-1"
+}
+
 variable "db_name" {
   description = "AWS RDS Database Name"
   type        = string
-  default     = "rcl-db"
+  default     = "rcldb"
 }
 
 variable "db_username" {
@@ -42,7 +48,7 @@ variable "instance_class" {
 variable "performance_insights_enabled" {
   description = "AWS RDS Database Performance Insights Selection"
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "allocated_storage" {
@@ -78,7 +84,7 @@ variable "final_snapshot_identifier" {
 variable "skip_final_snapshot" {
   description = "Determines Whether The Final SS of The RDS DB should be Taken"
   type        = bool
-  default     = false
+  default     = true
 }
 
 variable "deletion_protection" {
@@ -99,18 +105,22 @@ variable "monitoring_interval" {
   type        = number
 }
 
+
+variable "create_monitoring_role" {
+  description = "AWS DB Parameter Group Name"
+  type        = bool
+  default     = false
+
+}
+
 variable "rdspg_name" {
   description = "AWS DB Parameter Group Name"
   type        = string
 }
 
+
 variable "rdspg_family" {
   description = "AWS DB Parameter Group Family"
-  type        = string
-}
-
-variable "rdsog_name" {
-  description = "AWS DB Option Group Name"
   type        = string
 }
 

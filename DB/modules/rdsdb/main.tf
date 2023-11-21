@@ -17,7 +17,7 @@ resource "aws_db_instance" "rdsdb" {
 #    enabled_cloudwatch_logs_exports = ["general"]
 #    create_cloudwatch_log_group     = true
     backup_retention_period = var.backup_retention_period
-    final_snapshot_identifier = var.final_snapshot_identifier
+    final_snapshot_identifier = var.final_snapshot
     skip_final_snapshot     = var.skip_final_snapshot
     deletion_protection     = var.deletion_protection
     storage_encrypted       = var.storage_encrypted
@@ -27,6 +27,8 @@ resource "aws_db_instance" "rdsdb" {
     apply_immediately    = var.apply_immediately
 }
 
+
+/*
 resource "aws_db_parameter_group" "rdspg" {
   name   = var.rdspg_name
   family = var.rdspg_family
@@ -36,9 +38,6 @@ resource "aws_db_parameter_group" "rdspg" {
     value = var.parameter_value
   }
 
-  lifecycle {
-    create_before_destroy = var.create_before_destroy
-  }
 }
 
 resource "aws_db_option_group" "rdsog" {
@@ -56,3 +55,5 @@ resource "aws_db_option_group" "rdsog" {
     }
   }
 }
+
+*/
