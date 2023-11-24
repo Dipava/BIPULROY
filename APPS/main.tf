@@ -56,7 +56,6 @@ resource "aws_route53_record" "apps_dns" {
 
   resource "aws_acm_certificate" "acm" {
     count = var.create_certificate ? 1 : 0
-    zone_id    = data.aws_route53_zone.mydomain.zone_id
     domain_name = trimsuffix(data.aws_route53_zone.mydomain.name, ".")
     subject_alternative_names = ["*.droytech.in"]
     tags = {Name = "acm-droytech"}
@@ -328,7 +327,7 @@ resource "aws_iam_instance_profile" "rds_admin_profile" {
     launch_template_name        = "app1-dev-lt"
     launch_template_description = "Launch template for App1"
     update_default_version      = true
-    image_id          = data.aws_ami.amzlinux2.id
+    image_id          = data.aws_ami.ubuntu.id
     instance_type     = var.instance_type
     iam_instance_profile_name = aws_iam_instance_profile.rds_admin_profile.name
     user_data         = base64encode(templatefile("app1-ums-install.tmpl", { rds_db_endpoint = data.terraform_remote_state.rdsdb.outputs.db_instance_address }))
@@ -422,7 +421,7 @@ resource "aws_iam_instance_profile" "rds_admin_profile" {
     launch_template_name        = "app2-dev-lt"
     launch_template_description = "Launch template for App2"
     update_default_version      = true
-    image_id          = data.aws_ami.amzlinux2.id
+    image_id          = data.aws_ami.ubuntu.id
     instance_type     = var.instance_type
     user_data                   = filebase64("${path.module}/app2-install.sh")
     block_device_mappings = [
@@ -516,9 +515,9 @@ resource "aws_iam_instance_profile" "rds_admin_profile" {
     launch_template_name        = "app3-dev-lt"
     launch_template_description = "Launch template for App3"
     update_default_version      = true
-    image_id          = data.aws_ami.amzlinux2.id
+    image_id          = data.aws_ami.ubuntu.id
     instance_type     = var.instance_type
-    user_data         = file("${path.module}/user_data.sh")
+    user_data         = filebase64("${path.module}/app3-install.sh")
     block_device_mappings = [
       {
         # Root volume
