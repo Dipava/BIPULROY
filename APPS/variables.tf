@@ -45,8 +45,3 @@ variable "private_instance_count" {
     description = "Private EC2 Instance Count"
     type = number
 }
-
-variable "aws_region" {
-    description = "AWS_Region"
-    type = string
-}
