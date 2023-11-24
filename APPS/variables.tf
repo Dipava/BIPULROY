@@ -1,9 +1,16 @@
 
+variable "aws_region" {
+  description = "AWS Region"
+  type = string 
+  default = "ap-south-1"
+}
+
 #  TERRAFORM AWS ACM VARIABLES
 
 variable "create_certificate" {
   description = "Determines whether ACM Creates Certificates"
   type = bool
+  default = true
 }
 
 
