@@ -169,7 +169,7 @@ resource "aws_route53_record" "apps_dns" {
     {
       port               = 443
       protocol           = "HTTPS"
-      certificate_arn    = aws_acm_certificate.acm.acm_certificate_arn
+      certificate_arn    = aws_acm_certificate[*].acm.arn
       action_type = "fixed-response"
       fixed_response = {
         content_type = "text/plain"
