@@ -45,3 +45,8 @@ variable "private_instance_count" {
     description = "Private EC2 Instance Count"
     type = number
 }
+
+variable "iam_role" {
+    description = "iam role for apps"
+    type = string  
+}

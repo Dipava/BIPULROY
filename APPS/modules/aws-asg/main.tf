@@ -1099,6 +1099,7 @@ resource "aws_iam_role_policy_attachment" "this" {
   role       = aws_iam_role.this[0].name
 }
 
+/*
 resource "aws_iam_instance_profile" "this" {
   count = local.create && var.create_iam_instance_profile ? 1 : 0
 
@@ -1110,3 +1111,4 @@ resource "aws_iam_instance_profile" "this" {
 
   tags = merge(var.tags, var.iam_role_tags)
 }
+*/
