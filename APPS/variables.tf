@@ -48,5 +48,6 @@ variable "private_instance_count" {
 
 variable "iam_role" {
     description = "iam role for apps"
-    type = string  
+    type = string
+    default = "rds-role"
 }
