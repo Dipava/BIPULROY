@@ -18,10 +18,12 @@ locals {
 # Launch template
 ################################################################################
 
+/*
 locals {
   iam_instance_profile_arn  = var.create_iam_instance_profile ? aws_iam_instance_profile.this[0].arn : var.iam_instance_profile_arn
   iam_instance_profile_name = !var.create_iam_instance_profile && var.iam_instance_profile_arn == null ? var.iam_instance_profile_name : null
 }
+*/
 
 resource "aws_launch_template" "this" {
   count = var.create_launch_template ? 1 : 0
@@ -126,7 +128,7 @@ resource "aws_launch_template" "this" {
       configured = hibernation_options.value.configured
     }
   }
-
+/*
   dynamic "iam_instance_profile" {
     for_each = local.iam_instance_profile_name != null || local.iam_instance_profile_arn != null ? [1] : []
     content {
@@ -134,7 +136,7 @@ resource "aws_launch_template" "this" {
       arn  = local.iam_instance_profile_arn
     }
   }
-
+*/
   dynamic "instance_market_options" {
     for_each = length(var.instance_market_options) > 0 ? [var.instance_market_options] : []
     content {

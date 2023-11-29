@@ -58,8 +58,14 @@ resource "aws_route53_record" "apps_dns" {
     count = var.create_certificate ? 1 : 0
     domain_name = trimsuffix(data.aws_route53_zone.mydomain.name, ".")
     subject_alternative_names = ["*.droytech.in"]
+    validation_method = "DNS"
     tags = {Name = "acm-droytech"}
   }
+
+  output "acm_certificate_arn" {
+  description = "The ARN of the certificate"
+  value       = aws_acm_certificate.acm[*].arn
+}
   
 ###########
 ####ALB####
@@ -169,7 +175,7 @@ resource "aws_route53_record" "apps_dns" {
     {
       port               = 443
       protocol           = "HTTPS"
-      certificate_arn    = resource.aws_acm_certificate.acm[*].acm.arn
+      certificate_arn    = aws_acm_certificate.acm[0].arn
       action_type = "fixed-response"
       fixed_response = {
         content_type = "text/plain"

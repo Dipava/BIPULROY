@@ -20,7 +20,7 @@ data "terraform_remote_state" "private_sg" {
   backend  = "s3"
   config   = {
     bucket =  "dipava-tfstate-files"
-    key    =  "*dev/vpc/vpc.tfstate"
+    key    =  "dev/vpc/vpc.tfstate"
     region =  var.aws_region
   }
 }
