@@ -29,44 +29,73 @@ data "aws_ami" "ubuntu" {
   }
 }
 
-data "aws_route53_zone" "mydomain" {
-  name = "droytech.in"
-
-}
 
 
-###########
-####R53####
-###########
 
-resource "aws_route53_record" "apps_dns" {
-    zone_id = data.aws_route53_zone.mydomain.zone_id
-    name    = "rcl.droytech.in"
-    type    = "A"
-    alias {
-      name                   = module.alb.lb_dns_name
-      zone_id                = module.alb.lb_zone_id
-      evaluate_target_health = true
-    }
-  }
-  
+
+
 ###########
 ####ACM####
 ###########
 
   resource "aws_acm_certificate" "acm" {
-    count = var.create_certificate ? 1 : 0
+  #  count = var.create_certificate ? 1 : 0
     domain_name = trimsuffix(data.aws_route53_zone.mydomain.name, ".")
     subject_alternative_names = ["*.droytech.in"]
     validation_method = "DNS"
     tags = {Name = "acm-droytech"}
   }
 
-  output "acm_certificate_arn" {
-  description = "The ARN of the certificate"
-  value       = aws_acm_certificate.acm[*].arn
+############
+#R53 Record#
+############
+
+data "aws_route53_zone" "mydomain" {
+  name = "droytech.in"
+  private_zone = false
+
+}
+
+resource "aws_route53_record" "apps_dns" {
+  zone_id = data.aws_route53_zone.mydomain.zone_id
+  name    = "apps.droytech.in"
+  type    = "A"
+  alias {
+    name                   = module.alb.lb_dns_name
+    zone_id                = module.alb.lb_zone_id
+    evaluate_target_health = true
+  }
 }
   
+################
+#ACM Validation#
+################
+resource "aws_route53_record" "val" {
+  for_each = {
+    for dvo in aws_acm_certificate.acm.domain_validation_options : dvo.domain_name => {
+      name   = dvo.resource_record_name
+      record = dvo.resource_record_value
+      type   = dvo.resource_record_type
+    }
+  }
+
+  allow_overwrite = true
+  name            = each.value.name
+  records         = [each.value.record]
+  ttl             = 60
+  type            = each.value.type
+  zone_id         = data.aws_route53_zone.mydomain.zone_id
+}
+  resource "aws_acm_certificate_validation" "val" {
+    certificate_arn         = aws_acm_certificate.acm.arn
+    validation_record_fqdns = [for record in aws_route53_record.val : record.fqdn]
+  }
+
+  output "acm_certificate_arn" {
+  description = "The ARN of the certificate"
+  value       = aws_acm_certificate.acm.arn
+}
+
 ###########
 ####ALB####
 ###########
@@ -84,13 +113,13 @@ resource "aws_route53_record" "apps_dns" {
       {
         name_prefix          = "app1-"
         backend_protocol     = "HTTP"
-        backend_port         = 80
+        backend_port         = 8080
         target_type          = "instance"
         deregistration_delay = 10
         health_check = {
           enabled             = true
           interval            = 30
-          path                = "/app1/index.html"
+          path                = "/login"
           port                = "traffic-port"
           healthy_threshold   = 3
           unhealthy_threshold = 3
@@ -127,13 +156,13 @@ resource "aws_route53_record" "apps_dns" {
       {
         name_prefix          = "app3-"
         backend_protocol     = "HTTP"
-        backend_port         = 8080
+        backend_port         = 80
         target_type          = "instance"
         deregistration_delay = 10
         health_check = {
           enabled             = true
           interval            = 30
-          path                = "/login"
+          path                = "/app1/index.html"
           port                = "traffic-port"
           healthy_threshold   = 3
           unhealthy_threshold = 3
@@ -175,7 +204,7 @@ resource "aws_route53_record" "apps_dns" {
     {
       port               = 443
       protocol           = "HTTPS"
-      certificate_arn    = aws_acm_certificate.acm[0].arn
+      certificate_arn    = aws_acm_certificate.acm.arn
       action_type = "fixed-response"
       fixed_response = {
         content_type = "text/plain"
@@ -196,7 +225,7 @@ resource "aws_route53_record" "apps_dns" {
         actions = [
           {
             type = "forward"
-            target_group_index = 0
+            target_group_index = 2
           }
         ]
         conditions = [
@@ -229,7 +258,7 @@ resource "aws_route53_record" "apps_dns" {
         actions = [
           {
             type = "forward"
-            target_group_index = 2
+            target_group_index = 0
           }
         ]
         
@@ -289,7 +318,7 @@ resource "aws_iam_instance_profile" "rds_admin_profile" {
     # Autoscaling group -app1
     # depends_on = [data.terraform_remote_state.vpc]
     name            = "app1-asg"
-    use_name_prefix = false
+    use_name_prefix = true
     instance_name   = "app1-dev"
     security_groups          = [data.terraform_remote_state.private_sg.outputs.private_sg_group_id]
     target_group_arns = module.alb.target_group_arns
